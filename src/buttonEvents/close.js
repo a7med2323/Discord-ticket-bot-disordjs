@@ -1,4 +1,4 @@
-const { ChannelType,PermissionFlagsBits ,  SlashCommandBuilder , EmbedBuilder , ButtonStyle , ButtonBuilder , ActionRowBuilder } = require('discord.js');
+const { EmbedBuilder , ButtonStyle , ButtonBuilder , ActionRowBuilder } = require('discord.js');
 const config = require('../../config');
     module.exports = async (interaction, client) => {
         if (!interaction.isButton()) return;
@@ -10,41 +10,43 @@ const config = require('../../config');
             let arraa = Array.from( arra.keys() );
           
           };
+            await interaction.deferReply();
             const channel = await interaction.channel;
             const member = await interaction.guild.members.cache.get(channel.topic);
             const guild = await interaction.guild;
             await guild.channels.edit(channel.id,{parent: config.ticketsCloseCategory});
-            
-            const messages = await channel.lastMessageId;
-            //const [firstValue] = await messages.values();
-            console.log(messages);
-            
-            //console.log(Array.from(messages)[0]);
-            return;
-             
-            
-            const deleteButton = new ButtonBuilder()
-                .setStyle(ButtonStyle.Danger)
-                .setEmoji("🗑️")
-                .setDisabled(true)
-                .setCustomId("ticket-delete");
-          
-            const row = new ActionRowBuilder()
-            .addComponents(deleteButton);
-
-
+            const messages = await channel.messages.fetch();
+            const thumbnail = await interaction.guild.iconURL();
+            const customerButton = new ButtonBuilder()
+              .setStyle(ButtonStyle.Danger)
+              .setEmoji("🔒")
+              .setCustomId("close")
+              .setDisabled(true);
+              const adminButton = new ButtonBuilder()
+              .setStyle(ButtonStyle.Primary)
+              .setEmoji("🕵️‍♂️")
+              .setLabel(config.ticket.adminButton)
+              .setCustomId("admin-options");
+              const rowe = new ActionRowBuilder()
+              .addComponents(customerButton,adminButton);
+              const message = await messages.last();
+            message.edit({components:[rowe]})
+            .then(msg => console.log(`Updated the content of a message to ${msg.content}`))
+            .catch(console.error);
             const embed = new EmbedBuilder()
-            .setTitle(`ticket is closed`)
-            .setDescription(` <@!${interaction.user.id}>تم غلق التذكرة بواسطة`)
-            .setColor('#653386')
+            .setTitle(config.closeMessage.title)
+            .setDescription(`${config.closeMessage.description}<@!${interaction.user.id}>`)
+            .setColor(config.closeMessage.color)
+            .setThumbnail(thumbnail)
             .setFooter({ text: `${config.sendPanel.footerText}`, iconURL: `${guild.iconURL()}` });
             
         
-             await interaction.reply({ embeds: [embed], components: [row] }).then(() => setTimeout(() => { 
+             await interaction.editReply({ embeds: [embed] }).then(() => setTimeout(() => { 
                 interaction.channel.permissionOverwrites.edit(member.id, {
-                    SEND_MESSAGES: false,
-                    ATTACH_FILES:false,
-                    EMBED_LINKS:false
+                    SendMessages: false,
+                    AttachFiles:false,
+                    EmbedLinks:false,
+                    ViewChannel:false,
                   });
 
             }, 2000));

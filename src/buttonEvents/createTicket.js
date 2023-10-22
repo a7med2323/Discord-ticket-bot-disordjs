@@ -2,6 +2,8 @@
 const { ChannelType,PermissionFlagsBits ,  SlashCommandBuilder , EmbedBuilder , ButtonStyle , ButtonBuilder , ActionRowBuilder } = require('discord.js');
 const config = require('../../config');
 module.exports = async (interaction,client) => {
+    if (!interaction.isButton()) return;
+
     await interaction.deferReply({ephemeral:true});
     const ticketName = `ticket-${interaction.user.username}`.toLowerCase();
             const supportRoles = await config.ticketRoles.map(x => {
@@ -29,16 +31,16 @@ module.exports = async (interaction,client) => {
                 ],
               });
 
-              await interaction.editReply({ content: `Ticket created successfully in ${createdChannel}!` , ephemeral: true });
+              await interaction.editReply({ content: `${config.ticket.success} ${createdChannel}!` , ephemeral: true });
               const customerButton = new ButtonBuilder()
               .setStyle(ButtonStyle.Danger)
               .setEmoji("🔒")
-              .setCustomId("close")
+              .setCustomId("confirm-close");
               const adminButton = new ButtonBuilder()
               .setStyle(ButtonStyle.Primary)
               .setEmoji("🕵️‍♂️")
               .setLabel(config.ticket.adminButton)
-              .setCustomId("admin-options")
+              .setCustomId("admin-options");
               /*const alertButton = new ButtonBuilder()
               .setStyle(ButtonStyle.Secondary)
               .setEmoji("📩")
@@ -47,9 +49,9 @@ module.exports = async (interaction,client) => {
               const row = new ActionRowBuilder()
               .addComponents(customerButton,adminButton);
               const embed = new EmbedBuilder()
-              .setTitle("New Ticket!")
-            .setDescription(`Hello <@!${interaction.user.id}>, a staff will assist you shortly!\n\n**Press the 🔒 button to close the ticket!**`)
-            .setColor('#653386')
+              .setTitle(config.ticket.title)
+            .setDescription(`Hello <@!${interaction.user.id}>, ${config.ticket.description}`)
+            .setColor(config.ticket.color)
             .setFooter({ text: `${interaction.user.username}`, iconURL: `${interaction.guild.iconURL()}` });
 
             await createdChannel.send({ content: `${config.ticketRoles.map((m) => `<@&${m}>`).join(", ")}. New Ticket!`, embeds: [embed], components: [row] });
